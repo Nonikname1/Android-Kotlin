@@ -6,12 +6,22 @@ import android.view.ViewGroup
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.example.myapplication.R
 import com.example.myapplication.data.models.ApartmentDto
 import com.example.myapplication.databinding.ItemApartmentBinding
 
 class ApartmentPagingAdapter(
-    private val onClick: (ApartmentDto) -> Unit
+    private val onClick: (ApartmentDto) -> Unit,
+    private val onFavoriteClick: (ApartmentDto) -> Unit
 ) : PagingDataAdapter<ApartmentDto, ApartmentPagingAdapter.ApartmentViewHolder>(DIFF) {
+
+    private var favoriteIds: Set<String> = emptySet()
+
+    fun setFavoriteIds(ids: Set<String>) {
+        if (ids == favoriteIds) return
+        favoriteIds = ids
+        notifyItemRangeChanged(0, itemCount)
+    }
 
     inner class ApartmentViewHolder(private val binding: ItemApartmentBinding) :
         RecyclerView.ViewHolder(binding.root) {
@@ -35,6 +45,11 @@ class ApartmentPagingAdapter(
             }
             binding.statusChip.text = statusLabel
             binding.statusChip.chipBackgroundColor = ColorStateList.valueOf(statusColor)
+
+            binding.favoriteButton.setImageResource(
+                if (item.id in favoriteIds) R.drawable.ic_favorite_filled else R.drawable.ic_favorite_border
+            )
+            binding.favoriteButton.setOnClickListener { onFavoriteClick(item) }
 
             binding.root.setOnClickListener { onClick(item) }
         }

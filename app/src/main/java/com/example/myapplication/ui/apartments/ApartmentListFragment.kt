@@ -40,6 +40,8 @@ class ApartmentListFragment : Fragment() {
         return binding.root
     }
 
+    private val favoritesManager by lazy { (requireActivity().application as App).favoritesManager }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
@@ -47,6 +49,7 @@ class ApartmentListFragment : Fragment() {
         setupFilterButton()
         observeApartments()
         observeRefreshSignal()
+        observeFavorites()
 
         binding.fabAdd.setOnClickListener {
             findNavController().navigate(R.id.action_list_to_create)
@@ -54,12 +57,19 @@ class ApartmentListFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        adapter = ApartmentPagingAdapter { apartment ->
-            findNavController().navigate(
-                R.id.action_list_to_detail,
-                bundleOf(ApartmentDetailFragment.ARG_APARTMENT_ID to apartment.id)
-            )
-        }
+        adapter = ApartmentPagingAdapter(
+            onClick = { apartment ->
+                findNavController().navigate(
+                    R.id.action_list_to_detail,
+                    bundleOf(ApartmentDetailFragment.ARG_APARTMENT_ID to apartment.id)
+                )
+            },
+            onFavoriteClick = { apartment ->
+                viewLifecycleOwner.lifecycleScope.launch {
+                    favoritesManager.toggleFavorite(apartment.id)
+                }
+            }
+        )
 
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.adapter = adapter.withLoadStateFooter(
@@ -85,10 +95,22 @@ class ApartmentListFragment : Fragment() {
     private fun setupFilterButton() {
         binding.toolbar.inflateMenu(R.menu.menu_apartment_list)
         binding.toolbar.setOnMenuItemClickListener { item ->
-            if (item.itemId == R.id.action_filter) {
-                showFilterSheet()
-                true
-            } else false
+            when (item.itemId) {
+                R.id.action_filter -> { showFilterSheet(); true }
+                R.id.action_favorites -> {
+                    findNavController().navigate(R.id.action_list_to_favorites)
+                    true
+                }
+                else -> false
+            }
+        }
+    }
+
+    private fun observeFavorites() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            favoritesManager.favoriteIds.collectLatest { ids ->
+                adapter.setFavoriteIds(ids)
+            }
         }
     }
 

@@ -16,6 +16,7 @@ import com.example.myapplication.App
 import com.example.myapplication.R
 import com.example.myapplication.data.models.ApartmentDto
 import com.example.myapplication.databinding.FragmentApartmentDetailBinding
+import com.example.myapplication.ui.mortgage.MortgageCalculatorFragment
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -28,6 +29,8 @@ class ApartmentDetailFragment : Fragment() {
     private val viewModel: ApartmentDetailViewModel by viewModels {
         ApartmentDetailViewModelFactory((requireActivity().application as App).apartmentRepository)
     }
+
+    private val favoritesManager by lazy { (requireActivity().application as App).favoritesManager }
 
     private lateinit var photoAdapter: PhotoAdapter
     private var apartmentId: String? = null
@@ -47,11 +50,13 @@ class ApartmentDetailFragment : Fragment() {
         apartmentId = arguments?.getString(ARG_APARTMENT_ID)
 
         binding.toolbar.setNavigationOnClickListener { findNavController().navigateUp() }
+        setupFavoriteAction()
 
         setupPhotosRecyclerView()
         observeUiState()
         observeErrors()
         observeStatusChanged()
+        observeFavorite()
 
         binding.retryButton.setOnClickListener {
             apartmentId?.let { viewModel.loadApartment(it) }
@@ -88,6 +93,29 @@ class ApartmentDetailFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.errorEvent.collectLatest { message ->
                 Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    private fun setupFavoriteAction() {
+        binding.toolbar.inflateMenu(R.menu.menu_apartment_detail)
+        binding.toolbar.setOnMenuItemClickListener { item ->
+            if (item.itemId == R.id.action_favorite) {
+                apartmentId?.let { id ->
+                    viewLifecycleOwner.lifecycleScope.launch { favoritesManager.toggleFavorite(id) }
+                }
+                true
+            } else false
+        }
+    }
+
+    private fun observeFavorite() {
+        val id = apartmentId ?: return
+        viewLifecycleOwner.lifecycleScope.launch {
+            favoritesManager.favoriteIds.collectLatest { ids ->
+                binding.toolbar.menu.findItem(R.id.action_favorite)?.setIcon(
+                    if (id in ids) R.drawable.ic_favorite_filled else R.drawable.ic_favorite_border
+                )
             }
         }
     }
@@ -133,6 +161,12 @@ class ApartmentDetailFragment : Fragment() {
             findNavController().navigate(
                 R.id.action_detail_to_edit,
                 bundleOf(CreateApartmentFragment.ARG_APARTMENT_ID to apt.id)
+            )
+        }
+        binding.mortgageButton.setOnClickListener {
+            findNavController().navigate(
+                R.id.action_detail_to_mortgage,
+                bundleOf(MortgageCalculatorFragment.ARG_APARTMENT_PRICE to apt.price)
             )
         }
 

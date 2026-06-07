@@ -60,6 +60,21 @@
         <action
             android:id="@+id/action_list_to_create"
             app:destination="@id/createApartmentFragment" />
+
+        <action
+            android:id="@+id/action_list_to_favorites"
+            app:destination="@id/favoritesFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/favoritesFragment"
+        android:name="com.example.myapplication.ui.favorites.FavoritesFragment"
+        android:label="@string/favorites_title"
+        tools:layout="@layout/fragment_favorites">
+
+        <action
+            android:id="@+id/action_favorites_to_detail"
+            app:destination="@id/apartmentDetailFragment" />
     </fragment>
 
     <fragment
@@ -75,6 +90,22 @@
         <action
             android:id="@+id/action_detail_to_edit"
             app:destination="@id/createApartmentFragment" />
+
+        <action
+            android:id="@+id/action_detail_to_mortgage"
+            app:destination="@id/mortgageCalculatorFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/mortgageCalculatorFragment"
+        android:name="com.example.myapplication.ui.mortgage.MortgageCalculatorFragment"
+        android:label="@string/mortgage_calculator_title"
+        tools:layout="@layout/fragment_mortgage_calculator">
+
+        <argument
+            android:name="apartmentPrice"
+            app:argType="long"
+            android:defaultValue="0L" />
     </fragment>
 
     <fragment

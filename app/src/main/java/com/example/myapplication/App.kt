@@ -2,6 +2,7 @@ package com.example.myapplication
 
 import android.app.Application
 import com.example.myapplication.data.api.RetrofitClient
+import com.example.myapplication.data.local.FavoritesManager
 import com.example.myapplication.data.local.TokenManager
 import com.example.myapplication.data.repository.ApartmentRepository
 import com.example.myapplication.data.repository.AuthRepository
@@ -9,6 +10,8 @@ import com.example.myapplication.data.repository.AuthRepository
 class App : Application() {
 
     lateinit var tokenManager: TokenManager
+        private set
+    lateinit var favoritesManager: FavoritesManager
         private set
     lateinit var authRepository: AuthRepository
         private set
@@ -18,6 +21,7 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         tokenManager = TokenManager(this)
+        favoritesManager = FavoritesManager(this)
         val api = RetrofitClient.create(tokenManager)
         authRepository = AuthRepository(api, tokenManager)
         apartmentRepository = ApartmentRepository(api)
