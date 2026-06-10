@@ -17,6 +17,3 @@ local.properties
 # JVM/Gradle crash dumps
 hs_err_pid*.log
 replay_pid*.log
-
-# Claude Code local session data
-/.claude/
